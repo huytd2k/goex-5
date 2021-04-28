@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/huytd2k/site-builder/pkg/link"
 )
@@ -25,9 +27,25 @@ func main() {
 
 	links, err := link.Parse(resp.Body)
 
-	if err != nil {
-		panic(err)
+	reqUrl := resp.Request.URL
+	baseUrl := url.URL{
+		Scheme: reqUrl.Scheme,
+		Host:   reqUrl.Host,
+	}
+	base := baseUrl.String()
+
+	var hrefs []string
+
+	for _, l := range links {
+		switch {
+		case strings.HasPrefix(l.Href, "/"):
+			hrefs = append(hrefs, base+l.Href)
+		case strings.HasPrefix(l.Href, "http"):
+			hrefs = append(hrefs, l.Href)
+		}
 	}
 
-	fmt.Printf("%+v", links)
+	for _, href := range hrefs {
+		println(href)
+	}
 }
